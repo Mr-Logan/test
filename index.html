@@ -14,8 +14,19 @@
  }
  h1 { margin-bottom:20px; }
  #controls {
-   margin-bottom:20px;
- }
+
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+#controls label {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+
  #img-comp-container {
    position: relative;
    margin: auto;
@@ -62,9 +73,10 @@
 <body>
 <h1>Image Comparison</h1>
 <div id="controls">
- <input type="file" id="before-input" accept="image/*"> Before
- <br>
- <input type="file" id="after-input" accept="image/*"> After
+  <label>Before <input type="file" id="before-input" accept="image/*"></label>
+  <label>After <input type="file" id="after-input" accept="image/*"></label>
+
+
 </div>
 <div id="comparison-wrapper" style="display:none;">
  <div id="img-comp-container">
@@ -94,7 +106,9 @@ function handleUpload() {
     const w = beforeImg.naturalWidth;
     const h = beforeImg.naturalHeight;
     afterImg.onload = () => {
-      const scale = Math.min(1, 1000 / w, window.innerWidth * 0.9 / w);
+
+      const scale = Math.min(1, window.innerWidth * 0.9 / w, (window.innerHeight - 200) / h);
+
       container.style.width = (w * scale) + 'px';
       container.style.height = (h * scale) + 'px';
       beforeImg.style.width = afterImg.style.width = container.style.width;
