@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Image Comparison</title>
+<style>
+ body {
+   font-family: Arial, sans-serif;
+   background:#222;
+   color:#fff;
+   text-align:center;
+   margin:0;
+   padding:20px;
+ }
+ h1 { margin-bottom:20px; }
+ #controls {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+#controls label {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+ #img-comp-container {
+   position: relative;
+   margin: auto;
+   max-width: 1000px;
+   width: 90vw;
+ }
+ #img-comp-container img {
+   display:block;
+   width:100%;
+   height:auto;
+ }
+ .img-comp-img {
+   position:absolute;
+   top:0;
+   left:0;
+   overflow:hidden;
+   width:100%;
+ }
+ .img-comp-overlay {
+   width:50%;
+ }
+ .img-comp-slider {
+   position:absolute;
+   z-index:10;
+   cursor:ew-resize;
+   width:4px;
+   height:100%;
+   background:rgba(255,255,255,0.7);
+ }
+ .img-comp-slider:before {
+   content:"";
+   position:absolute;
+   top:50%;
+   left:-8px;
+   transform:translateY(-50%);
+   width:16px;
+   height:16px;
+   background:#fff;
+   border:2px solid #000;
+   border-radius:50%;
+ }
+</style>
+</head>
+<body>
+<h1>Image Comparison</h1>
+<div id="controls">
+  <label>Before <input type="file" id="before-input" accept="image/*"></label>
+  <label>After <input type="file" id="after-input" accept="image/*"></label>
+</div>
+<div id="comparison-wrapper" style="display:none;">
+ <div id="img-comp-container">
+  <div class="img-comp-img">
+   <img id="before-img" src="" alt="Before">
+  </div>
+  <div class="img-comp-img img-comp-overlay">
+   <img id="after-img" src="" alt="After">
+  </div>
+ </div>
+</div>
+<script>
+const beforeInput = document.getElementById('before-input');
+const afterInput = document.getElementById('after-input');
+const beforeImg = document.getElementById('before-img');
+const afterImg = document.getElementById('after-img');
+const wrapper = document.getElementById('comparison-wrapper');
+const container = document.getElementById('img-comp-container');
+let overlay = document.querySelector('.img-comp-overlay');
+let slider;
+
+function handleUpload() {
+  if (!beforeInput.files[0] || !afterInput.files[0]) return;
+  const beforeURL = URL.createObjectURL(beforeInput.files[0]);
+  const afterURL = URL.createObjectURL(afterInput.files[0]);
+  beforeImg.onload = () => {
+    const w = beforeImg.naturalWidth;
+    const h = beforeImg.naturalHeight;
+    afterImg.onload = () => {
+      const scale = Math.min(1, window.innerWidth * 0.9 / w, (window.innerHeight - 200) / h);
+      container.style.width = (w * scale) + 'px';
+      container.style.height = (h * scale) + 'px';
+      beforeImg.style.width = afterImg.style.width = container.style.width;
+      beforeImg.style.height = afterImg.style.height = container.style.height;
+      wrapper.style.display = 'block';
+      initComparison();
+    };
+    afterImg.src = afterURL;
+  };
+  beforeImg.src = beforeURL;
+}
+
+beforeInput.addEventListener('change', handleUpload);
+afterInput.addEventListener('change', handleUpload);
+
+function initComparison() {
+  overlay = document.querySelector('.img-comp-overlay');
+  overlay.style.width = (container.offsetWidth / 2) + 'px';
+  if (slider) slider.remove();
+  slider = document.createElement('div');
+  slider.className = 'img-comp-slider';
+  container.appendChild(slider);
+  let clicked = false;
+  slider.addEventListener('mousedown', startSlide);
+  window.addEventListener('mouseup', endSlide);
+  slider.addEventListener('touchstart', startSlide);
+  window.addEventListener('touchend', endSlide);
+
+  function startSlide(e) {
+    e.preventDefault();
+    clicked = true;
+    window.addEventListener('mousemove', slideMove);
+    window.addEventListener('touchmove', slideMove);
+  }
+
+  function endSlide() {
+    clicked = false;
+    window.removeEventListener('mousemove', slideMove);
+    window.removeEventListener('touchmove', slideMove);
+  }
+
+  function slideMove(e) {
+    if (!clicked) return;
+    let pos = getCursorPos(e);
+    if (pos < 0) pos = 0;
+    if (pos > container.offsetWidth) pos = container.offsetWidth;
+    slide(pos);
+  }
+
+  function getCursorPos(e) {
+    const rect = container.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].pageX : e.pageX) - rect.left - window.pageXOffset;
+    return x;
+  }
+
+  function slide(x) {
+    overlay.style.width = x + 'px';
+    slider.style.left = overlay.offsetWidth - slider.offsetWidth / 2 + 'px';
+  }
+
+  slider.style.left = overlay.offsetWidth - slider.offsetWidth / 2 + 'px';
+}
+</script>
+</body>
+</html>
